@@ -1,13 +1,13 @@
-import { bigint, index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
+import { bigint, index, pgEnum, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
 export const providerEnum = pgEnum("provider", ["GITHUB", "GITLAB"])
 export const roleEnum = pgEnum("user_role", ["USER", "ADMIN", "SUPERADMIN"])
 
 export const usersTable = pgTable("users", {
     id: uuid("id").primaryKey().defaultRandom(),
-    name: varchar("name", { length: 255 }).notNull(),
+    fullName: varchar("full_name", { length: 255 }).notNull(),
     email: varchar("email", { length: 255 }).notNull().unique(),
-    passsword: text("password"),
+    password: text("password"),
     avatar: text("avatar").notNull().default(""),
     role: roleEnum("user_role").default("USER").notNull(),
     provider: providerEnum("provider"),
@@ -26,3 +26,6 @@ export const tokensTable = pgTable("tokens", {
 }, (table) => [
     index("tokens_user_id_idx").on(table.userId),
 ])
+
+export type User = typeof usersTable.$inferSelect
+export type NewUser = typeof usersTable.$inferInsert

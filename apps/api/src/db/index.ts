@@ -1,5 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
+import * as schema from "./schema"
 
 export default function connectDB() {
     const connectionString = process.env.DATABASE_URL
@@ -11,10 +12,10 @@ export default function connectDB() {
         connectionString,
         max: 10,
         connectionTimeoutMillis: 200000,
-        idleTimeoutMillis:30000
+        idleTimeoutMillis: 30000
     })
 
-    const db = drizzle(pool)
+    const db = drizzle(pool, { schema })
 
-    return db
+    return { db, pool }
 }
