@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { tokensTable, usersTable, type User } from "../../db/schema";
-import { and, eq, gt } from "drizzle-orm";
+import { and, eq, gt, isNull } from "drizzle-orm";
 import { loginSchema, registerSchema } from "./auth.types";
 import { ApiError, ApiResponse } from "../../utils/response";
 import { generateRefreshToken, hashRefreshToken } from "../../utils/tokens";
@@ -105,19 +105,20 @@ export const logoutUser = async (req: FastifyRequest, reply: FastifyReply) => {
     const db = req.server.db;
 
     const refreshToken = req.cookies["orca_refresh_token"]
-    if (!refreshToken) {
-        throw new ApiError(400, "Refresh token not found")
+    if (refreshToken) {
+        const hashedRefreshToken = hashRefreshToken(refreshToken)
+
+        await db
+            .update(tokensTable)
+            .set({
+                revokedAt: new Date(Date.now())
+            }).where(
+                and(
+                    eq(tokensTable.refreshToken, hashedRefreshToken),
+                    isNull(tokensTable.revokedAt)
+                )
+            )
     }
-
-    const hashedRefreshToken = hashRefreshToken(refreshToken)
-
-    await db
-        .update(tokensTable)
-        .set({
-            revokedAt: new Date(Date.now())
-        }).where(
-            eq(tokensTable.refreshToken, hashedRefreshToken)
-        )
 
     return reply
         .code(200)
@@ -141,6 +142,7 @@ export const refreshTokens = async (req: FastifyRequest, reply: FastifyReply) =>
         }).where(
             and(
                 eq(tokensTable.refreshToken, hashedRefreshToken),
+                isNull(tokensTable.revokedAt),
                 gt(tokensTable.expiresAt, new Date())
             )
         ).returning({

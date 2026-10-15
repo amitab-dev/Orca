@@ -1,9 +1,11 @@
 import Fastify from "fastify"
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
 import db from "./plugins/db";
+import authenticate from "./plugins/authenticate";
 import fastifyJwt from "@fastify/jwt";
 import fastifyCookie from "@fastify/cookie";
 import { authRoutes } from "./modules/auth/auth.routes";
+import { userRoutes } from "./modules/user/user.routes";
 import fastifyCors from "@fastify/cors";
 
 export default function bootstrap() {
@@ -27,6 +29,10 @@ export default function bootstrap() {
         secret: process.env.JWT_SECRET!,
         sign: {
             expiresIn: '15m'
+        },
+        cookie: {
+            cookieName: "orca_access_token",
+            signed: false
         }
     })
 
@@ -41,7 +47,9 @@ export default function bootstrap() {
     app.register(fastifyCookie)
 
     app.register(db)
+    app.register(authenticate)
     app.register(authRoutes, { prefix: "/api/v1/auth" })
+    app.register(userRoutes, { prefix: "/api/v1/users" })
 
     return app;
 }

@@ -1,9 +1,11 @@
 'use client'
 
+import { Navbar } from "@/components/navbar"
+
 export default function Home() {
     return (
         <>
-        This is home page
+        <Navbar />
         </>
     )
 }

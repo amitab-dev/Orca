@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Register, registerSchema } from "@/types/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios, { AxiosError } from "axios";
+import { getErrorMessage } from "@/lib/errors";
+import axios from "axios";
 import { AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -28,11 +29,7 @@ export default function RegisterPage() {
             await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/`, { ...data }, { withCredentials: true })
             router.push("/auth/login")
         } catch (error) {
-            let errMsg;
-            if (error instanceof AxiosError) {
-                errMsg = error.message
-            }
-            toast.error(errMsg || "Server failure")
+            toast.error(getErrorMessage(error, "Couldn't create your account. Please try again."))
         } finally {
             setLoading(false)
         }

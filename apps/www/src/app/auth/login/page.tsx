@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Login, loginSchema } from "@/types/auth"
 import { zodResolver } from "@hookform/resolvers/zod"
-import axios, { AxiosError } from "axios"
+import { getErrorMessage } from "@/lib/errors"
+import axios from "axios"
 import { AlertCircle, ChevronRight, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -25,17 +26,12 @@ export default function LoginPage() {
     const handleLoginUser = async (data: Login) => {
         setLoading(true)
         try {
-            console.log(data);
             const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, { ...data }, { withCredentials: true })
             if (res.status === 200) {
                 router.push("/home")
             }
         } catch (error) {
-            let errMsg;
-            if (error instanceof AxiosError) {
-                errMsg = error.message
-            }
-            toast.error(errMsg || "Server failure")
+            toast.error(getErrorMessage(error, "Couldn't log you in. Please try again."))
         } finally {
             setLoading(false)
         }
