@@ -6,19 +6,15 @@ export const authRoutes = async (app: FastifyInstance) => {
     app.post(
         "/",
         {
-            schema: {
-                body: { registerSchema }
-            }
+            schema: { body: registerSchema }
         },
-        async (req: FastifyRequest, reply: FastifyReply) => authController.registerUser(req, reply)
-    ),
+        async (req: FastifyRequest, reply: FastifyReply) => await authController.registerUser(req, reply)
+    )
 
     app.post(
         "/login",
         {
-            schema: {
-                body: { loginSchema }
-            }
+            schema: { body: loginSchema }
         },
         async (req: FastifyRequest, reply: FastifyReply) => authController.loginUser(req, reply)
     )

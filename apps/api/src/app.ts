@@ -3,6 +3,8 @@ import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fas
 import db from "./plugins/db";
 import fastifyJwt from "@fastify/jwt";
 import fastifyCookie from "@fastify/cookie";
+import { authRoutes } from "./modules/auth/auth.routes";
+import fastifyCors from "@fastify/cors";
 
 export default function bootstrap() {
     const app = Fastify({
@@ -28,9 +30,18 @@ export default function bootstrap() {
         }
     })
 
+    app.register(fastifyCors, {
+        credentials: true,
+        origin: process.env.NODE_ENV === "dev" ? true : process.env.ORIGIN,
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    });
+
+
     app.register(fastifyCookie)
 
     app.register(db)
+    app.register(authRoutes, { prefix: "/api/v1/auth" })
 
     return app;
 }
