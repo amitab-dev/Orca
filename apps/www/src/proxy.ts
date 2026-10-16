@@ -1,33 +1,31 @@
-import { NextResponse, type NextRequest } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 const ACCESS_TOKEN_COOKIE = "orca_access_token"
 const REFRESH_TOKEN_COOKIE = "orca_refresh_token"
 
-const publicRoutes = ["/"]
-const authRoutes = ["/auth/login", "/auth/register"]
-
-const LOGIN_ROUTE = "/auth/login"
-const DEFAULT_PRIVATE_ROUTE = "/home"
+const PUBLIC_ROUTES = ["/auth/login", "/auth/register"]
 
 export function proxy(req: NextRequest) {
-    const path = req.nextUrl.pathname
-    const isPublicRoute = publicRoutes.includes(path)
-    const isAuthRoute = authRoutes.includes(path)
+    const { pathname } = req.nextUrl
 
-    const isLoggedIn =
-        req.cookies.has(ACCESS_TOKEN_COOKIE) || req.cookies.has(REFRESH_TOKEN_COOKIE)
+    const accessToken = req.cookies.get(ACCESS_TOKEN_COOKIE)?.value
+    const refreshToken = req.cookies.get(REFRESH_TOKEN_COOKIE)?.value
+    const hasSession = Boolean(accessToken || refreshToken)
 
-    if (isAuthRoute && isLoggedIn) {
-        return NextResponse.redirect(new URL(DEFAULT_PRIVATE_ROUTE, req.nextUrl))
+    const isPublic = PUBLIC_ROUTES.some((routes) => pathname === routes || pathname.startsWith(`${routes}`))
+    if (!hasSession && !isPublic) {
+        return NextResponse.redirect(new URL("/auth/login", req.url))
     }
 
-    if (!isPublicRoute && !isAuthRoute && !isLoggedIn) {
-        return NextResponse.redirect(new URL(LOGIN_ROUTE, req.nextUrl))
+    if (hasSession && isPublic) {
+        return NextResponse.redirect(new URL("/home", req.url))
     }
 
     return NextResponse.next()
 }
 
 export const config = {
-    matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
+    matcher: [
+        "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"
+    ],
 }
