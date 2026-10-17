@@ -7,6 +7,8 @@ import fastifyCookie from "@fastify/cookie";
 import { authRoutes } from "./modules/auth/auth.routes";
 import { userRoutes } from "./modules/user/user.routes";
 import fastifyCors from "@fastify/cors";
+import oauth2 from "./plugins/oauth2";
+import { oauth2Routes } from "./modules/oauth2/oauth2.handler";
 
 export default function bootstrap() {
     const app = Fastify({
@@ -48,6 +50,9 @@ export default function bootstrap() {
 
     app.register(db)
     app.register(authenticate)
+    app.register(oauth2)
+
+    app.register(oauth2Routes, { prefix: "/auth" })
     app.register(authRoutes, { prefix: "/api/v1/auth" })
     app.register(userRoutes, { prefix: "/api/v1/users" })
 

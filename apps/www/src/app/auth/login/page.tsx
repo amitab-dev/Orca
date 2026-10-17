@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import toast from "react-hot-toast"
+import GithubAuthenticaion from "@/components/github-button"
 
 export default function LoginPage() {
     const [loading, setLoading] = useState(false)
@@ -26,7 +27,7 @@ export default function LoginPage() {
     const handleLoginUser = async (data: Login) => {
         setLoading(true)
         try {
-            const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, { ...data }, { withCredentials: true })
+            const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, { ...data }, { withCredentials: true })
             if (res.status === 200) {
                 router.push("/home")
             }
@@ -89,9 +90,7 @@ export default function LoginPage() {
                         </Button>
                     </form>
                     <Separator className={"my-2"} />
-                    <Button className={"w-full h-8"} variant={"secondary"} >
-                        Continue with GitHub
-                    </Button>
+                    <GithubAuthenticaion />
                     <Separator className={"my-2"} />
                     <div className="w-full mt-2 flex justify-start items-start space-x-1.5">
                         <p className="text-sm" >Already have an account ?</p>

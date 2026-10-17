@@ -4,11 +4,9 @@ import { and, eq, gt, isNull } from "drizzle-orm";
 import { loginSchema, registerSchema } from "./auth.types";
 import { ApiError, ApiResponse } from "../../utils/response";
 import { generateRefreshToken, hashRefreshToken } from "../../utils/tokens";
+import { ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL } from "../../constants";
 
-const ACCESS_TOKEN_TTL = 60 * 15
-const REFRESH_TOKEN_TTL = 60 * 60 * 24 * 7
-
-const formatUser = (user: User) => {
+export const formatUser = (user: User) => {
     return {
         id: user.id,
         name: user.fullName,

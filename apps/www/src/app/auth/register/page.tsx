@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import GithubAuthenticaion from "@/components/github-button";
 
 export default function RegisterPage() {
     const { register, handleSubmit, formState: { errors } } = useForm<Register>({
@@ -26,7 +27,7 @@ export default function RegisterPage() {
     const handleRegisterUser = async (data: Register) => {
         setLoading(true)
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/`, { ...data }, { withCredentials: true })
+            await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/`, { ...data }, { withCredentials: true })
             router.push("/auth/login")
         } catch (error) {
             toast.error(getErrorMessage(error, "Couldn't create your account. Please try again."))
@@ -91,18 +92,16 @@ export default function RegisterPage() {
                         <Button disabled={loading} type="submit" className="w-full mt-2 h-8" >
                             {
                                 loading ? <><span className="animate-spin" ><Loader2 /></span></> : <>
-                                    Continue 
+                                    Continue
                                     <span>
                                         <ChevronRight />
                                     </span>
                                 </>
-                        }
+                            }
                         </Button>
                     </form>
                     <Separator className={"my-2"} />
-                    <Button className={"w-full h-8"} variant={"secondary"} >
-                        Continue with GitHub
-                    </Button>
+                    <GithubAuthenticaion />
                     <Separator className={"my-2"} />
                     <div className="w-full mt-2 flex justify-start items-start space-x-1.5">
                         <p className="text-sm" >Already have an account ?</p>
