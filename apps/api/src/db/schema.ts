@@ -64,3 +64,5 @@ export type User = typeof usersTable.$inferSelect
 export type NewUser = typeof usersTable.$inferInsert
 export type Workspace = typeof workspaceTable.$inferSelect
 export type NewWorkspace = typeof workspaceTable.$inferInsert
+export type Application = typeof applicationTable.$inferSelect
+export type NewApplication = typeof applicationTable.$inferInsert

@@ -15,7 +15,7 @@ const formatWorkspace = (workspace: Workspace)  => {
     }
 }
 
-const getMembership = async (req: FastifyRequest, workspaceId: string) => {
+export const getMembership = async (req: FastifyRequest, workspaceId: string) => {
     const [membership] = await req.server.db
         .select({
             id: workspaceTable.id,
