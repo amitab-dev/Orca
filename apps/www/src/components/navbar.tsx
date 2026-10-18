@@ -15,7 +15,7 @@ export function Navbar() {
     const handleSignOut = async () => {
         setSigningOut(true);
         try {
-            await api.post("/auth/logout");
+            await api.post("/api/v1/auth/logout");
         } catch {
             toast.error("Failed to sign out cleanly");
         } finally {

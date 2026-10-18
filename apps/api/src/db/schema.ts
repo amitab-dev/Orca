@@ -62,3 +62,5 @@ export const applicationTable = pgTable("application", {
 
 export type User = typeof usersTable.$inferSelect
 export type NewUser = typeof usersTable.$inferInsert
+export type Workspace = typeof workspaceTable.$inferSelect
+export type NewWorkspace = typeof workspaceTable.$inferInsert

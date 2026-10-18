@@ -9,6 +9,7 @@ import { userRoutes } from "./modules/user/user.routes";
 import fastifyCors from "@fastify/cors";
 import oauth2 from "./plugins/oauth2";
 import { oauth2Routes } from "./modules/oauth2/oauth2.handler";
+import { workspaceRoute } from "./modules/workspace/workspace.route";
 
 export default function bootstrap() {
     const app = Fastify({
@@ -55,6 +56,7 @@ export default function bootstrap() {
     app.register(oauth2Routes, { prefix: "/auth" })
     app.register(authRoutes, { prefix: "/api/v1/auth" })
     app.register(userRoutes, { prefix: "/api/v1/users" })
+    app.register(workspaceRoute, { prefix: "/api/v1/workspaces" })
 
     return app;
 }

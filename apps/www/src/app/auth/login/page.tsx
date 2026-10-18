@@ -93,8 +93,8 @@ export default function LoginPage() {
                     <GithubAuthenticaion />
                     <Separator className={"my-2"} />
                     <div className="w-full mt-2 flex justify-start items-start space-x-1.5">
-                        <p className="text-sm" >Already have an account ?</p>
-                        <Link href={"/auth/login"} className="text-primary text-sm" >Login</Link >
+                        <p className="text-sm" >No account ?</p>
+                        <Link href={"/auth/register"} className="text-primary text-sm" >Create one</Link >
                     </div>
                 </div>
             </div>
