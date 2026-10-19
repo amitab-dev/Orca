@@ -5,6 +5,26 @@ export const api = axios.create({
     withCredentials: true,
 })
 
+let refreshPromise: Promise<void> | null = null
+
+const refreshTokens = () => {
+    if (!refreshPromise) {
+        refreshPromise = api
+            .post("/api/v1/auth/refresh")
+            .then(() => undefined)
+            .finally(() => {
+                refreshPromise = null
+            })
+    }
+    return refreshPromise
+}
+
+const redirectToLogin = () => {
+    if (typeof window !== "undefined" && window.location.pathname !== "/auth/login") {
+        window.location.href = "/auth/login"
+    }
+}
+
 api.interceptors.response.use(
     (res) => res,
     async (error: AxiosError) => {
@@ -13,13 +33,18 @@ api.interceptors.response.use(
             error.response?.status !== 401 ||
             !original ||
             original._retry ||
-            original.url?.startsWith("/auth/")
+            original.url?.startsWith("/api/v1/auth/")
         ) {
             return Promise.reject(error)
         }
 
         original._retry = true
-        await api.post("/auth/refresh")
+        try {
+            await refreshTokens()
+        } catch (refreshError) {
+            redirectToLogin()
+            return Promise.reject(refreshError)
+        }
         return api(original)
     }
 )
