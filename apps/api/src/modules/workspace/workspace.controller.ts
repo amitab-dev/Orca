@@ -2,11 +2,13 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { and, desc, eq } from "drizzle-orm";
 import { createWorkspaceSchema, updateWorkspaceSchema, workspaceParamsSchema } from "./workspace.types";
 import { ApiError, ApiResponse } from "../../utils/response";
-import { membersTable, workspaceTable, type NewWorkspace, type Workspace } from "../../db/schema";
+import { membersTable, usersTable, workspaceTable, type NewWorkspace, type Workspace } from "../../db/schema";
 import slugify from "slugify"
 import crypto from "node:crypto"
+import { userInfo } from "node:os";
+import { CLIENT_RENEG_WINDOW } from "node:tls";
 
-const formatWorkspace = (workspace: Workspace)  => {
+const formatWorkspace = (workspace: Workspace) => {
     return {
         id: workspace.id,
         name: workspace.name,
@@ -155,4 +157,32 @@ export const deleteWorkspace = async (req: FastifyRequest, reply: FastifyReply) 
     return reply
         .code(200)
         .send(new ApiResponse(200, null, "Workspace deleted successfully"))
+}
+
+export const getMyWorkspace = async (req: FastifyRequest, reply: FastifyReply) => {
+    const db = req.server.db
+    const { id } = req.user
+
+    const user = await db.query.usersTable.findFirst({
+        where: eq(usersTable.id, id)
+    })
+
+    if (!user) {
+        throw new ApiError(401, "Unauthorized")
+    }
+
+    const workspaces = await db
+        .select({
+            id: workspaceTable.id,
+            name: workspaceTable.name,
+            slug: workspaceTable.slug,
+            role: membersTable.workspaceRole
+        })
+        .from(workspaceTable)
+        .innerJoin(membersTable, eq(membersTable.workspaceId, workspaceTable.id))
+        .where(
+            eq(membersTable.memberId, user.id)
+        )
+
+    return reply.code(200).send(new ApiResponse(200, workspaces))
 }

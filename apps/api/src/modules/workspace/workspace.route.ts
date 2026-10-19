@@ -41,4 +41,9 @@ export const workspaceRoute = async (app: FastifyInstance) => {
         },
         async (req: FastifyRequest, reply: FastifyReply) => await workspaceController.deleteWorkspace(req, reply)
     )
+
+    app.get(
+        "/me",
+        async (req: FastifyRequest, reply: FastifyReply) => await workspaceController.getMyWorkspace(req, reply)
+    )
 }
