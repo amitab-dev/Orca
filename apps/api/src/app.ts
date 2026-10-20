@@ -11,6 +11,9 @@ import oauth2 from "./plugins/oauth2";
 import { oauth2Routes } from "./modules/oauth2/oauth2.handler";
 import { workspaceRoute } from "./modules/workspace/workspace.route";
 import { appRoutes } from "./modules/app/app.routes";
+import { deploymentRoutes } from "./modules/deployment/deployment.routes";
+import { webhookRoutes } from "./modules/webhook/webhook.routes";
+import { githubRoutes, githubSetupRoutes } from "./modules/github/github.routes";
 
 export default function bootstrap() {
     const app = Fastify({
@@ -59,6 +62,10 @@ export default function bootstrap() {
     app.register(userRoutes, { prefix: "/api/v1/users" })
     app.register(workspaceRoute, { prefix: "/api/v1/workspaces" })
     app.register(appRoutes, { prefix: "/api/v1/workspaces/:workspaceId/apps" })
+    app.register(deploymentRoutes, { prefix: "/api/v1/workspaces/:workspaceId/apps/:appId/deployments" })
+    app.register(webhookRoutes, { prefix: "/api/v1/webhooks" })
+    app.register(githubRoutes, { prefix: "/api/v1/workspaces/:workspaceId/github" })
+    app.register(githubSetupRoutes, { prefix: "/api/v1/github" })
 
     return app;
 }

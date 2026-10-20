@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { appParamsSchema, createAppSchema, updateAppSchema, workspaceAppsParamsSchema } from "./app.types";
+import { appParamsSchema, createAppSchema, updateAppSchema, updateDeployModeSchema, workspaceAppsParamsSchema } from "./app.types";
 import * as appController from "./app.controller"
 
 export const appRoutes = async (app: FastifyInstance) => {
@@ -35,6 +35,14 @@ export const appRoutes = async (app: FastifyInstance) => {
             schema: { params: appParamsSchema, body: updateAppSchema }
         },
         async (req: FastifyRequest, reply: FastifyReply) => await appController.updateApp(req, reply)
+    )
+
+    app.patch(
+        "/:appId/deploy-mode",
+        {
+            schema: { params: appParamsSchema, body: updateDeployModeSchema }
+        },
+        async (req: FastifyRequest, reply: FastifyReply) => await appController.updateDeployMode(req, reply)
     )
 
     app.delete(

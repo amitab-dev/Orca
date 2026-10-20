@@ -1,9 +1,11 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { and, desc, eq, ne } from "drizzle-orm";
-import { appParamsSchema, createAppSchema, updateAppSchema, workspaceAppsParamsSchema } from "./app.types";
+import { appParamsSchema, createAppSchema, updateAppSchema, updateDeployModeSchema, workspaceAppsParamsSchema } from "./app.types";
 import { ApiError, ApiResponse } from "../../utils/response";
 import { applicationTable, type Application } from "../../db/schema";
 import { getMembership } from "../workspace/workspace.controller";
+import { findInstallation } from "../github/github.controller";
+import { getInstallationRepository } from "../../utils/github";
 
 const formatApp = (app: Application) => {
     return {
@@ -12,14 +14,21 @@ const formatApp = (app: Application) => {
         workspaceId: app.workspaceId,
         sourceRepository: app.sourceRepository,
         repositoryName: app.repositoryName,
+        githubInstallationId: app.githubInstallationId,
+        githubRepositoryId: app.githubRepositoryId,
+        branch: app.branch,
+        deployMode: app.deployMode,
+        rootDirectory: app.rootDirectory,
+        dockerfilePath: app.dockerfilePath,
         status: app.status,
+        activeDeploymentId: app.activeDeploymentId,
         createdBy: app.createdBy,
         createdAt: app.createdAt,
         updatedAt: app.updatedAt
     }
 }
 
-const assertCanWrite = (role: string) => {
+export const assertCanWrite = (role: string) => {
     if (role === "VIEWER") {
         throw new ApiError(403, "Viewers cannot modify apps")
     }
@@ -40,7 +49,7 @@ const assertRepositoryAvailable = async (req: FastifyRequest, sourceRepository: 
     }
 }
 
-const findApp = async (req: FastifyRequest, workspaceId: string, appId: string) => {
+export const findApp = async (req: FastifyRequest, workspaceId: string, appId: string) => {
     const [app] = await req.server.db
         .select()
         .from(applicationTable)
@@ -68,14 +77,36 @@ export const createApp = async (req: FastifyRequest, reply: FastifyReply) => {
     const membership = await getMembership(req, params.data.workspaceId)
     assertCanWrite(membership.role)
 
-    await assertRepositoryAvailable(req, body.data.sourceRepository)
+    const { installationId, repositoryId, ...fields } = body.data
+    let source = {
+        sourceRepository: fields.sourceRepository ?? "",
+        repositoryName: fields.repositoryName ?? "",
+        branch: fields.branch,
+        githubInstallationId: null as string | null,
+        githubRepositoryId: null as number | null
+    }
+
+    if (installationId && repositoryId) {
+        const installation = await findInstallation(req, params.data.workspaceId, installationId)
+        const repository = await getInstallationRepository(installation.installationId, repositoryId)
+        source = {
+            sourceRepository: repository.html_url,
+            repositoryName: repository.full_name,
+            branch: fields.branch ?? repository.default_branch,
+            githubInstallationId: installation.id,
+            githubRepositoryId: repository.id
+        }
+    }
+
+    await assertRepositoryAvailable(req, source.sourceRepository)
 
     const [createdApp] = await req.server.db
         .insert(applicationTable)
         .values({
-            name: body.data.name,
-            sourceRepository: body.data.sourceRepository,
-            repositoryName: body.data.repositoryName,
+            name: fields.name,
+            ...source,
+            rootDirectory: fields.rootDirectory,
+            dockerfilePath: fields.dockerfilePath,
             workspaceId: params.data.workspaceId,
             createdBy: req.user.id,
         })
@@ -135,9 +166,13 @@ export const updateApp = async (req: FastifyRequest, reply: FastifyReply) => {
         await assertRepositoryAvailable(req, body.data.sourceRepository, params.data.appId)
     }
 
+    const unlinkGithub = body.data.sourceRepository || body.data.repositoryName
+        ? { githubInstallationId: null, githubRepositoryId: null }
+        : {}
+
     const [updatedApp] = await req.server.db
         .update(applicationTable)
-        .set(body.data)
+        .set({ ...body.data, ...unlinkGithub })
         .where(
             and(
                 eq(applicationTable.id, params.data.appId),
@@ -181,4 +216,34 @@ export const deleteApp = async (req: FastifyRequest, reply: FastifyReply) => {
     return reply
         .code(200)
         .send(new ApiResponse(200, null, "App deleted successfully"))
+}
+
+export const updateDeployMode = async (req: FastifyRequest, reply: FastifyReply) => {
+    const params = appParamsSchema.safeParse(req.params)
+    const body = updateDeployModeSchema.safeParse(req.body)
+    if (!params.success || !body.success) {
+        throw new ApiError(400, "Validation error")
+    }
+
+    const membership = await getMembership(req, params.data.workspaceId)
+    assertCanWrite(membership.role)
+
+    const [updatedApp] = await req.server.db
+        .update(applicationTable)
+        .set({ deployMode: body.data.deployMode })
+        .where(
+            and(
+                eq(applicationTable.id, params.data.appId),
+                eq(applicationTable.workspaceId, params.data.workspaceId)
+            )
+        )
+        .returning()
+
+    if (!updatedApp) {
+        throw new ApiError(404, "App not found")
+    }
+
+    return reply
+        .code(200)
+        .send(new ApiResponse(200, formatApp(updatedApp), "Deploy mode updated successfully"))
 }

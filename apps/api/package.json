@@ -5,6 +5,7 @@
     "private": true,
     "scripts": {
         "dev": "bun --watch run src/index.ts",
+        "worker": "bun run src/worker/index.ts",
         "start": "bun run dist/index.ts",
         "build": "bun build ./index.ts --outdir ./dist",
         "typecheck": "tsc --noEmit",
