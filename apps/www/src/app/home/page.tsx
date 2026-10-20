@@ -1,6 +1,6 @@
 'use client'
 
-import CreateWorkspaceModel from "@/components/lauout/create-workspace-model"
+import CreateWorkspaceModel from "@/components/layout/create-workspace-model"
 import { Navbar } from "@/components/navbar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,11 +14,14 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import toast from "react-hot-toast"
 import { Workspace } from "@/types/workspace"
+import PopupProviver from "@/components/layout/popup-provider"
+import { AnimatePresence } from "motion/react"
 
 export default function Home() {
     const [loading, setLoading] = useState(false)
     const [userWorkspace, setUserWorkspace] = useState<Array<Workspace>>()
     const [createOpen, setCreateOpen] = useState(false)
+    const [showPopupProvider, setShowPopupProvider] = useState(true)
     const router = useRouter()
 
     const getUserWokspaces = async () => {
@@ -42,13 +45,14 @@ export default function Home() {
         <>
             <Navbar />
             <div className="w-full h-[calc(100dvh-3.5rem)] flex justify-start items-center flex-col space-y-2 ">
+                <AnimatePresence>
+                    {
+                        showPopupProvider && <PopupProviver />
+                    }
+                </AnimatePresence>
                 <div className="w-full h-auto px-60 py-5  justify-between items-center flex" >
                     <div className="flex items-center space-x-2" >
                         <h1 className="font-medium">Your workspaces</h1>
-                        {
-                            !loading && userWorkspace &&
-                            <Badge variant="secondary" >{userWorkspace.length}</Badge>
-                        }
                     </div>
                     <Button onClick={() => setCreateOpen(true)}>
                         <span>
